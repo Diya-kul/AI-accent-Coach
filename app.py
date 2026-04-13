@@ -1,6 +1,8 @@
 import librosa
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score
 import os
 
 # Feature Extraction Function
@@ -11,16 +13,17 @@ def extract_features(file_path):
         
         # CHECK IF AUDIO IS EMPTY
         if len(audio) == 0:
-            print("Empty audio: ", file_path)
+            print(" Empty audio!=: ", file_path)
             return None
     
         # EXTRACR MFCC
-        mfcc= librosa.feature.mfcc( y=audio, sr=sr, n_mfcc=13) #iss line ka kya mtlab ha?
+        mfcc= librosa.feature.mfcc( y=audio, sr=sr, n_mfcc=30) #iss line ka kya mtlab ha?
     
         # CONVERT TO FIXED SIZE
         return np.mean(mfcc.T, axis=0)
+    
     except Exception as e:
-        print("Error loading.... ")
+        print("! Error loading.... ", file_path)
         print(e)
         return None
 
@@ -37,7 +40,6 @@ def files(child_directory):
     parent_directory = "data"
     return os.path.join(parent_directory, child_directory)
 
-bad_files=[]
 
 for file in os.listdir(files("indian_accent")):
     file_path= os.path.join(files("indian_accent"),file)
@@ -46,8 +48,7 @@ for file in os.listdir(files("indian_accent")):
     if features is not None:    
         x.append(features)
         y.append(0)
-    else:
-        bad_files.append(file_path)
+
     
 for file in os.listdir(files("British_accent")):
     file_path= os.path.join(files("British_accent"),file)
@@ -56,8 +57,7 @@ for file in os.listdir(files("British_accent")):
     if features is not None:    
         x.append(features)
         y.append(1)
-    else:
-        bad_files.append(file_path)
+
     
 for file in os.listdir(files("American_accent")):
     file_path= os.path.join(files("American_accent"),file)
@@ -66,19 +66,19 @@ for file in os.listdir(files("American_accent")):
     if features is not None:    
         x.append(features)
         y.append(2)
-    else:
-        bad_files.append(file_path)
+
         
-print("!!!!!!!! \n Delete Bad files: ", bad_files)
+scaler = StandardScaler()
+x =scaler.fit_transform(x)
 
 # TRANING MODEL
 model= RandomForestClassifier()
 model.fit(x,y)
 
-print("Modeltrained successfull!")
+print("Model Trained successfull!")
 
 # TEST THE MODEL 
-test_file= "sample.ogg"
+test_file= "test case0.wav"
 
 features= extract_features(test_file)
 prediction= model.predict([features])
@@ -87,5 +87,10 @@ if prediction[0] == 0:
     print("Indian accent")
 elif prediction[0]==1:
     print("British accent")
-else:
+elif prediction[0]==2:
     print("American accent")
+else:
+    print("Sorry unable to detect!..Try Again.")
+    
+preds = model.predict(x)
+print("Accuracy:", accuracy_score(y, preds))
