@@ -12,11 +12,10 @@ def predict_accent(file_path):
         features= scaler.transform([features])
         prediction= model.predict(features)
     if prediction[0] == 0:
-        print("Indian accent")
+        return "Indian accent"
     elif prediction[0]==1:
-        print("British accent")
+        return "British accent"
     elif prediction[0]==2:
-        print("American accent")
+        return "American accent"
     else:
-        print("Sorry unable to detect!..Try Again.")
-    
+        return "Sorry unable to detect!..Try Again."
