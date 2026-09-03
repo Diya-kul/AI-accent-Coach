@@ -1,3 +1,4 @@
+# Load Trained model and scaler
 import joblib
 from features import extract_features
 
@@ -7,15 +8,28 @@ scaler = joblib.load("scaler.pkl")
 
 def predict_accent(file_path):
     
+    # Extract features from the audio
     features= extract_features(file_path)
-    if features is not None:
-        features= scaler.transform([features])
-        prediction= model.predict(features)
-    if prediction[0] == 0:
+    
+    # Handle feature extraction failure
+    if features is None:
+        return "Unable to process audio. Try again."
+
+    # Scaler features
+    features = scaler.transform([features])
+    
+    #Predict accent
+    prediction = model.predict(features)
+        
+    # Get predicted class
+    predicted_class = prediction[0]
+    
+    # Map predicted class to accent
+    if predicted_class == 0:
         return "Indian accent"
-    elif prediction[0]==1:
+    elif predicted_class==1:
         return "British accent"
-    elif prediction[0]==2:
+    elif predicted_class==2:
         return "American accent"
     else:
         return "Sorry unable to detect!..Try Again."
