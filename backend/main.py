@@ -1,64 +1,129 @@
-from fastapi import FastAPI, UploadFile, File
-import librosa
-import numpy as np
-import joblib
+from fastapi import FastAPI, UploadFile, File, HTTPException
 import os
+import shutil
 import uuid
 
-app= FastAPI()
+from compare import dtw_distance
+from feedback import generate_feedback
+from predict import predict_accent
 
-# LOAD MODEL AND SCALER
-model= joblib.load("accent_model.pkl")
-scaler= joblib.load("scaler.pkl")
 
-# FEATURE EXTRACTION
-def extract_features(file_path):
+app = FastAPI(
+    title="AI Accent Coach API",
+    description="API for accent detection and pronunciation analysis",
+    version="1.0"
+)
+
+
+# Base directory of the backend
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Important folders
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+REFERENCE_FOLDER = os.path.join(BASE_DIR, "data", "reference")
+
+# Create uploads folder if it doesn't exist
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+@app.get("/")
+def home():
+    return {
+        "message": "AI Accent Coach API is running!"
+    }
+
+
+@app.get("/health")
+def health_check():
+    return {
+        "status": "healthy"
+    }
+
+
+@app.post("/analyze")
+async def analyze_audio(
+    word: str,
+    audio: UploadFile = File(...)
+):
+
+    # Check that an audio file was uploaded
+    if not audio.filename:
+        raise HTTPException(
+            status_code=400,
+            detail="No audio file uploaded."
+        )
+
+    # Create reference audio path
+    ref_audio = os.path.join(
+        REFERENCE_FOLDER,
+        f"{word.lower()}.wav"
+    )
+
+    # Check if reference audio exists
+    if not os.path.isfile(ref_audio):
+        raise HTTPException(
+            status_code=404,
+            detail=f"No reference audio found for '{word}'."
+        )
+
+    # Get uploaded file extension
+    file_extension = os.path.splitext(audio.filename)[1].lower()
+
+    # Allow supported audio formats
+    allowed_extensions = [".wav", ".mp3", ".m4a", ".ogg"]
+
+    if file_extension not in allowed_extensions:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported audio format. Please upload WAV, MP3, M4A, or OGG."
+        )
+
+    # Create a unique filename
+    unique_filename = f"{uuid.uuid4()}{file_extension}"
+
+    user_audio_path = os.path.join(
+        UPLOAD_FOLDER,
+        unique_filename
+    )
+
+    # Save uploaded audio
     try:
-        audio, sr= librosa.load(file_path, sr=16000)
-        
-        if len(audio)==0:
-            return None
-        
-        mfcc= librosa.feature.mfcc( y=audio, sr=sr, n_mfcc=20)
-        return np.mean( mfcc.T, axis=0)
+        with open(user_audio_path, "wb") as buffer:
+            shutil.copyfileobj(audio.file, buffer)
+
+        # 1. Predict accent
+        accent = predict_accent(user_audio_path)
+
+        # 2. Compare pronunciation with reference
+        distance = dtw_distance(
+            user_audio_path,
+            ref_audio
+        )
+
+        # 3. Calculate pronunciation score
+        score = max(
+            0,
+            min(100, 100 - int(distance / 4000))
+        )
+
+        # 4. Generate feedback
+        feedback = generate_feedback(distance)
+
+        # Return results
+        return {
+            "word": word.lower(),
+            "predicted_accent": accent,
+            "pronunciation_score": score,
+            "dtw_distance": round(distance, 2),
+            "feedback": feedback
+        }
+
     except Exception as e:
-        print("Error:",e)
-        return None
-    
-# PREDICTION API
-@app.post("/predict")
-async def predict( file: UploadFile = File(...)):
-    # SAVE UPLOADED FILE TEMPORARILY
-    temp_file = f"temp_{uuid.uuid4().hex}.wav"
-    
-    with open( temp_file, "wb") as f:
-        f.write( await file.read())
-        
-    # EXTRACT FEATURES
-    features= extract_features(temp_file)
-    
-    # REMOVE TEMP FILE
-    try:
-        features = extract_features(temp_file)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error analyzing audio: {str(e)}"
+        )
+
     finally:
-            if os.path.exists(temp_file):
-                os.remove(temp_file)
-        
-    if features is None:
-        return {"error":"Invalid audio file"}
-    
-    # SCALE FEATURES
-    features= scaler.transform([features])
-    
-    # PREDICT
-    prediction= model.predict(features)[0]
-    
-    # CONVERT LABEL TO TEXT
-    if prediction == 0:
-        accent = "Indian"
-    elif prediction == 1:
-        accent = "British"
-    else:
-        accent = "American"
-        
-    return { "accent" : accent }
+        # Close the uploaded file
+        await audio.close()
