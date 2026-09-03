@@ -1,4 +1,5 @@
 def generate_feedback(distance):
+    
     if distance < 40000:
         return "Excellent pronunciation! Your speech closely matches the native reference."
     elif distance < 70000:
@@ -6,4 +7,4 @@ def generate_feedback(distance):
     elif distance <100000:
         return "Fail pronunciation. Try matching the pronunciation speed and stress pattern."
     else:
-        "Needs improvement. Practice the word again and listen carefully to the reference audio"
+        return "Needs improvement. Practice the word again and listen carefully to the reference audio."
