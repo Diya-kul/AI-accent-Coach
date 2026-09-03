@@ -1,6 +1,6 @@
 from compare import dtw_distance
 from feedback import generate_feedback
-from predict import predict_accent
+from backend.predict import predict_accent
 
 import os
 import sys
