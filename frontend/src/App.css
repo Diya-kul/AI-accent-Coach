@@ -1,0 +1,162 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0f1117;
+  color: #f5f5f5;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 60px 20px;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 7px 14px;
+  border-radius: 20px;
+  background: #29213f;
+  color: #b77cff;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+h1 {
+  font-size: 52px;
+  margin: 15px 0 10px;
+}
+
+.subtitle {
+  color: #a5a8b3;
+  font-size: 18px;
+}
+
+.card {
+  width: 100%;
+  max-width: 650px;
+  margin: auto;
+  padding: 35px;
+  background: #181b23;
+  border: 1px solid #2b2e38;
+  border-radius: 18px;
+}
+
+label {
+  display: block;
+  margin: 20px 0 8px;
+  font-weight: bold;
+}
+
+input[type="text"],
+input[type="file"] {
+  width: 100%;
+  padding: 13px;
+  border-radius: 8px;
+  border: 1px solid #383b46;
+  background: #101218;
+  color: white;
+}
+
+button {
+  width: 100%;
+  margin-top: 25px;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: #8b4dff;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.file-name {
+  color: #aaa;
+  font-size: 14px;
+}
+
+.error {
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #3b1d24;
+  color: #ff9ca8;
+}
+
+.result {
+  margin-top: 35px;
+  padding-top: 25px;
+  border-top: 1px solid #30333d;
+}
+
+.result h2 {
+  margin-bottom: 25px;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.result-grid div {
+  padding: 18px;
+  background: #101218;
+  border-radius: 10px;
+}
+
+.result-grid span {
+  display: block;
+  color: #999;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.result-grid strong {
+  font-size: 18px;
+}
+
+.feedback {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 10px;
+  background: #211b32;
+}
+
+.feedback h3 {
+  margin-top: 0;
+  color: #b77cff;
+}
+
+.feedback p {
+  color: #d5d5d8;
+  line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+  h1 {
+    font-size: 38px;
+  }
+
+  .card {
+    padding: 25px;
+  }
+
+  .result-grid {
+    grid-template-columns: 1fr;
+  }
+}
