@@ -1,12 +1,10 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 import os
 import shutil
-import uuid
 
-from compare import dtw_distance
-from feedback import generate_feedback
-from predict import predict_accent
-
+from backend.compare import dtw_distance
+from backend.feedback import generate_feedback
+from backend.predict import predict_accent
 
 app = FastAPI(
     title="AI Accent Coach API",
@@ -15,14 +13,8 @@ app = FastAPI(
 )
 
 
-# Base directory of the backend
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Important folders
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
-REFERENCE_FOLDER = os.path.join(BASE_DIR, "data", "reference")
-
 # Create uploads folder if it doesn't exist
+UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
@@ -53,37 +45,25 @@ async def analyze_audio(
             detail="No audio file uploaded."
         )
 
-    # Create reference audio path
-    ref_audio = os.path.join(
-        REFERENCE_FOLDER,
-        f"{word.lower()}.wav"
-    )
+    # Reference audio path
+    ref_audio = f"data/reference/{word.lower()}.wav"
 
-    # Check if reference audio exists
+    # Check reference audio exists
     if not os.path.isfile(ref_audio):
         raise HTTPException(
             status_code=404,
             detail=f"No reference audio found for '{word}'."
         )
 
-    # Get uploaded file extension
-    file_extension = os.path.splitext(audio.filename)[1].lower()
+    # Create a path to save uploaded audio
+    file_extension = os.path.splitext(audio.filename)[1]
 
-    # Allow supported audio formats
-    allowed_extensions = [".wav", ".mp3", ".m4a", ".ogg"]
-
-    if file_extension not in allowed_extensions:
-        raise HTTPException(
-            status_code=400,
-            detail="Unsupported audio format. Please upload WAV, MP3, M4A, or OGG."
-        )
-
-    # Create a unique filename
-    unique_filename = f"{uuid.uuid4()}{file_extension}"
+    if not file_extension:
+        file_extension = ".wav"
 
     user_audio_path = os.path.join(
         UPLOAD_FOLDER,
-        unique_filename
+        f"user_audio{file_extension}"
     )
 
     # Save uploaded audio
@@ -91,10 +71,17 @@ async def analyze_audio(
         with open(user_audio_path, "wb") as buffer:
             shutil.copyfileobj(audio.file, buffer)
 
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error saving audio file: {str(e)}"
+        )
+
+    try:
         # 1. Predict accent
         accent = predict_accent(user_audio_path)
 
-        # 2. Compare pronunciation with reference
+        # 2. Compare pronunciation
         distance = dtw_distance(
             user_audio_path,
             ref_audio
@@ -103,7 +90,7 @@ async def analyze_audio(
         # 3. Calculate pronunciation score
         score = max(
             0,
-            min(100, 100 - int(distance / 4000))
+            100 - int(distance / 4000)
         )
 
         # 4. Generate feedback
@@ -111,7 +98,7 @@ async def analyze_audio(
 
         # Return results
         return {
-            "word": word.lower(),
+            "word": word,
             "predicted_accent": accent,
             "pronunciation_score": score,
             "dtw_distance": round(distance, 2),
@@ -123,7 +110,3 @@ async def analyze_audio(
             status_code=500,
             detail=f"Error analyzing audio: {str(e)}"
         )
-
-    finally:
-        # Close the uploaded file
-        await audio.close()

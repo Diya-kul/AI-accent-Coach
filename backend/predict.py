@@ -1,34 +1,27 @@
 import os
 import joblib
-
-from features import extract_features
-
+from backend.features import extract_features
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-MODEL_PATH = os.path.join(
-    BASE_DIR,
-    "models",
-    "accent_model.pkl"
-)
+MODEL_PATH = os.path.join(BASE_DIR, "models", "accent_model.pkl")
+SCALER_PATH = os.path.join(BASE_DIR, "models", "scaler.pkl")
 
-SCALER_PATH = os.path.join(
-    BASE_DIR,
-    "models",
-    "scaler.pkl"
-)
+# Validate model and scaler files before loading
+def safe_load(path, name):
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"{name} file not found at {path}")
+    if os.path.getsize(path) == 0:
+        raise ValueError(f"{name} file at {path} is empty or corrupted")
+    return joblib.load(path)
 
-
-# Load model and scaler
-model = joblib.load(MODEL_PATH)
-scaler = joblib.load(SCALER_PATH)
+model = safe_load(MODEL_PATH, "Accent model")
+scaler = safe_load(SCALER_PATH, "Scaler")
 
 
-def predict_accent(file_path):
-
+def predict_accent(file_path: str) -> str:
     # Extract features
     features = extract_features(file_path)
-
     if features is None:
         return "Unable to process audio."
 
@@ -37,7 +30,6 @@ def predict_accent(file_path):
 
     # Predict accent
     prediction = model.predict(features)
-
     predicted_class = prediction[0]
 
     accent_map = {
@@ -46,7 +38,4 @@ def predict_accent(file_path):
         2: "American accent"
     }
 
-    return accent_map.get(
-        predicted_class,
-        "Unable to detect accent"
-    )
+    return accent_map.get(predicted_class, "Unable to detect accent")
