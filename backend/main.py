@@ -46,7 +46,7 @@ async def analyze_audio(
         )
 
     # Reference audio path
-    ref_audio = f"data/reference/{word.lower()}.wav"
+    ref_audio = f"backend/data/reference/{word.lower()}.wav"
 
     # Check reference audio exists
     if not os.path.isfile(ref_audio):
@@ -110,3 +110,5 @@ async def analyze_audio(
             status_code=500,
             detail=f"Error analyzing audio: {str(e)}"
         )
+        
+        # PS C:\Users\Diya Dewa\OneDrive\Desktop\Work\Github\project\AI accent coach> uvicorn backend.main:app --reload
