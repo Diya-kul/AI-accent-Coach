@@ -1,0 +1,11 @@
+# User-generated audio
+uploads/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Frontend environment variables
+frontend/.env
+frontend/.env.*
+!frontend/.env.example

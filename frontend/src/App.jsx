@@ -12,6 +12,7 @@ function App() {
 
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
+  const API_URL = import.meta.env.VITE_API_URL;
 
   // Start microphone recording
   const startRecording = async () => {
@@ -151,28 +152,46 @@ function App() {
     formData.append("audio", audio);
 
     try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/analyze?word=" +
-          encodeURIComponent(word.trim()),
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.detail || "Analysis failed.");
-      }
-
-      setResult(data);
-    } catch (err) {
-      setError(err.message || "Failed to connect to backend.");
-    } finally {
-      setLoading(false);
+  const response = await fetch(
+    `${API_URL}/analyze?word=${encodeURIComponent(word.trim())}`,
+    {
+      method: "POST",
+      body: formData,
     }
-  };
+  );
+
+  let data = {};
+
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      data.detail || `Analysis failed (${response.status}).`
+    );
+  }
+
+  setResult(data);
+
+  } catch (err) {
+
+    if (err instanceof TypeError) {
+      setError(
+        "Unable to connect to the backend. Please make sure the FastAPI server is running."
+      );
+    } else {
+      setError(
+        err.message || "Something went wrong during analysis."
+      );
+    }
+
+  } finally {
+    setLoading(false);
+  }
+}
 
   // Upload an existing audio file
   const handleFileChange = (event) => {
@@ -268,39 +287,84 @@ function App() {
         )}
 
         {result && (
-          <section className="result">
-            <h2>Analysis Result</h2>
+  <section className="result">
+    <div className="result-header">
+      <div>
+        <p className="result-label">YOUR ANALYSIS</p>
+        <h2>Pronunciation Results</h2>
+      </div>
 
-            <div className="result-grid">
-              <div>
-                <span>Word</span>
-                <strong>{result.word}</strong>
-              </div>
+      <button
+        className="try-again"
+        onClick={() => {
+          setResult(null);
+          setAudio(null);
+          setAudioUrl("");
+          setError("");
+        }}
+      >
+        ↻ Try Again
+      </button>
+    </div>
 
-              <div>
-                <span>Predicted Accent</span>
-                <strong>{result.predicted_accent}</strong>
-              </div>
+    <div className="score-section">
+      <div
+        className="score-circle"
+        style={{
+          "--score": `${result.pronunciation_score}%`,
+        }}
+      >
+        <div className="score-inner">
+          <strong>{result.pronunciation_score}</strong>
+          <span>/100</span>
+        </div>
+      </div>
 
-              <div>
-                <span>Pronunciation Score</span>
-                <strong>
-                  {result.pronunciation_score}/100
-                </strong>
-              </div>
+      <div className="score-text">
+        <p className="result-label">PRONUNCIATION SCORE</p>
 
-              <div>
-                <span>DTW Distance</span>
-                <strong>{result.dtw_distance}</strong>
-              </div>
-            </div>
+        <h3>
+          {result.pronunciation_score >= 80
+            ? "Great job! 🎉"
+            : result.pronunciation_score >= 60
+            ? "Good effort! 👍"
+            : "Keep practicing! 💪"}
+        </h3>
 
-            <div className="feedback">
-              <h3>AI Feedback</h3>
-              <p>{result.feedback}</p>
-            </div>
-          </section>
-        )}
+        <p>
+          Your pronunciation has been analyzed using
+          AI-powered accent detection and speech comparison.
+        </p>
+      </div>
+    </div>
+
+    <div className="result-grid">
+      <div className="result-box">
+        <span>Practice Word</span>
+        <strong>{result.word}</strong>
+      </div>
+
+      <div className="result-box">
+        <span>Detected Accent</span>
+        <strong>{result.predicted_accent}</strong>
+      </div>
+
+      <div className="result-box">
+        <span>DTW Distance</span>
+        <strong>{result.dtw_distance}</strong>
+      </div>
+    </div>
+
+    <div className="feedback">
+      <div className="feedback-icon">💡</div>
+
+      <div>
+        <h3>AI Feedback</h3>
+        <p>{result.feedback}</p>
+      </div>
+    </div>
+  </section>
+)}
       </main>
     </div>
   );
