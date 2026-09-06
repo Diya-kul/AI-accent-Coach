@@ -1,173 +1,61 @@
-# 🎤 AI Accent Coach
+# 🎙️ AI Accent Coach
 
-An AI-powered system that analyzes spoken audio to detect accents and provide personalized feedback for improving pronunciation.
+An AI-powered pronunciation analysis system that detects a speaker's accent and evaluates pronunciation by comparing recorded speech with a reference pronunciation.
 
----
-
-## 🚀 Project Overview
-
-AI Accent Coach is designed to help users improve their spoken English by:
-
-* Detecting their current accent (e.g., Indian, American, British)
-* Analyzing pronunciation patterns
-* Providing actionable feedback for improvement
-
-This project combines **speech processing**, **machine learning**, and **natural language processing** to create an interactive learning experience.
+The project combines Machine Learning, audio feature extraction, Dynamic Time Warping (DTW), FastAPI, and React to provide an interactive pronunciation coaching experience.
 
 ---
 
-## 🎯 Features
+## 🚀 Features
 
-* 🎙️ Audio input (upload or record speech)
-* 🔍 Accent classification using ML models
-* 📊 Confidence score for predictions
-* 🗣️ Pronunciation feedback and suggestions
-* 📈 (Optional) Progress tracking over time
+- 🎙️ Record pronunciation directly from the browser
+- 📁 Upload an audio file for analysis
+- 🤖 AI-based accent detection
+- 🗣️ Pronunciation comparison with reference audio
+- 📊 Pronunciation score
+- 📐 Dynamic Time Warping (DTW) based comparison
+- 💬 AI-generated pronunciation feedback
+- ⏱️ Real-time recording timer
+- 🔊 Audio preview
+- 🔄 Try Again functionality
+- ⚠️ User-friendly error handling
+- 🌐 React frontend connected to FastAPI backend
 
 ---
 
 ## 🧠 How It Works
 
-1. **Audio Input**
+The application follows this pipeline:
 
-   * User uploads or records speech
+```text
+User Speech
+     ↓
+Audio Recording / Upload
+     ↓
+Audio Preprocessing
+     ↓
+Feature Extraction
+     ↓
+Accent Prediction
+     ↓
+Reference Audio Comparison
+     ↓
+Dynamic Time Warping (DTW)
+     ↓
+Pronunciation Score
+     ↓
+Feedback Generation
+     ↓
+Result Dashboard
 
-2. **Feature Extraction**
 
-   * Extract features like MFCC and spectrograms from audio
+## 🔮 Future Improvements
 
-3. **Accent Detection**
-
-   * Machine learning model predicts the accent
-
-4. **Speech Analysis**
-
-   * Convert speech to text using Whisper (or similar)
-
-5. **Feedback Generation**
-
-   * Compare pronunciation with target accent
-   * Provide improvement suggestions
-
----
-
-## 🛠️ Tech Stack
-
-* **Programming Language:** Python
-* **Libraries:**
-
-  * librosa (audio processing)
-  * python_speech_features (feature extraction)
-  * scikit-learn / TensorFlow / PyTorch (ML models)
-* **Speech-to-Text:** Whisper
-* **Frontend (optional):** Streamlit / Flask
-
----
-
-## 📂 Project Structure
-
-```
-AI-Accent-Coach/
-│── data/                 # Dataset
-│── models/               # Trained models
-│── notebooks/            # Experiments & training
-│── src/
-│   ├── audio_processing.py
-│   ├── feature_extraction.py
-│   ├── model.py
-│   ├── feedback.py
-│── app.py                # Main application (UI)
-│── requirements.txt
-│── README.md
-```
-
----
-
-## 📊 Dataset
-
-This project uses publicly available speech datasets such as:
-
-* Mozilla Common Voice
-* Speech Accent Archive
-* Kaggle speech datasets
-
----
-
-## ⚙️ Installation
-
-1. Clone the repository:
-
-```
-git clone https://github.com/Diya-kul/AI-accent-Coach
-cd AI-Accent-Coach
-```
-
-2. Install dependencies:
-
-```
-pip install -r requirements.txt
-```
-
----
-
-## ▶️ Usage
-
-Run the application:
-
-```
-python app.py
-```
-
-Or (if using Streamlit):
-
-```
-streamlit run app.py
-```
-
-Upload an audio file and get accent detection + feedback.
-
----
-
-## 📈 Future Improvements
-
-* Real-time speech feedback
-* Word-level pronunciation correction
-* Accent transformation suggestions
-* Mobile app integration
-* User progress tracking dashboard
-
----
-
-## ⚠️ Challenges
-
-* Accent data imbalance
-* Background noise handling
-* Accurate pronunciation feedback generation
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to fork the repo and submit a pull request.
-
----
-
-## 👨‍💻 Author
-
-Diya dewa
-GitHub: https://github.com/Diya-kul/AI-accent-Coach
-
----
-
-## ⭐ Acknowledgements
-
-* Mozilla Common Voice
-* OpenAI Whisper
-* Open-source speech processing community
-
----
-
-## 💡 Inspiration
-
-Inspired by language learning platforms like ELSA Speak and Duolingo, aiming to make accent training accessible using AI.
-
+- Expand the reference pronunciation library to support more words
+- Add multiple reference pronunciations for each word
+- Improve pronunciation scoring using more advanced speech metrics
+- Add phoneme-level pronunciation analysis
+- Improve accent classification using a larger and more diverse dataset
+- Provide detailed pronunciation visualizations
+- Track pronunciation progress over time
+- Deploy the application for online use

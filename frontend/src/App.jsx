@@ -6,12 +6,14 @@ function App() {
   const [audio, setAudio] = useState(null);
   const [audioUrl, setAudioUrl] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
+  const timerRef = useRef(null);
   const API_URL = import.meta.env.VITE_API_URL;
 
   // Start microphone recording
@@ -19,6 +21,7 @@ function App() {
     try {
       setError("");
       setResult(null);
+      resetRecording();
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
@@ -56,6 +59,12 @@ function App() {
 
       recorder.start();
       setIsRecording(true);
+      setRecordingTime(0);
+
+      timerRef.current = setInterval(() => {
+        setRecordingTime((prevTime) => prevTime + 1);
+      }, 1000);
+
     } catch (err) {
       setError("Microphone access was denied or unavailable.");
     }
@@ -66,6 +75,9 @@ function App() {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+
+      clearInterval(timerRef.current);
+      timerRef.current = null;
     }
   };
 
@@ -152,58 +164,81 @@ function App() {
     formData.append("audio", audio);
 
     try {
-  const response = await fetch(
-    `${API_URL}/analyze?word=${encodeURIComponent(word.trim())}`,
-    {
-      method: "POST",
-      body: formData,
-    }
-  );
-
-  let data = {};
-
-  try {
-    data = await response.json();
-  } catch {
-    data = {};
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      data.detail || `Analysis failed (${response.status}).`
+    const response = await fetch(
+      `${API_URL}/analyze?word=${encodeURIComponent(word.trim())}`,
+      {
+        method: "POST",
+        body: formData,
+      }
     );
-  }
 
-  setResult(data);
+    let data = {};
 
-  } catch (err) {
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
 
-    if (err instanceof TypeError) {
-      setError(
-        "Unable to connect to the backend. Please make sure the FastAPI server is running."
-      );
-    } else {
-      setError(
-        err.message || "Something went wrong during analysis."
+    if (!response.ok) {
+      throw new Error(
+        data.detail || `Analysis failed (${response.status}).`
       );
     }
 
-  } finally {
-    setLoading(false);
+    setResult(data);
+
+    } catch (err) {
+
+      if (err instanceof TypeError) {
+        setError(
+          "Unable to connect to the backend. Please make sure the FastAPI server is running."
+        );
+      } else {
+        setError(
+          err.message || "Something went wrong during analysis."
+        );
+      }
+
+    } finally {
+      setLoading(false);
+    }
   }
-}
+
+  const resetRecording = () => {
+    // Stop microphone if it is still active
+    if (mediaRecorderRef.current) {
+      if (mediaRecorderRef.current.state !== "inactive") {
+        mediaRecorderRef.current.stop();
+      }
+
+      mediaRecorderRef.current = null;
+    }
+
+    // Stop timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // Reset recording state
+    setIsRecording(false);
+    setRecordingTime(0);
+  };
 
   // Upload an existing audio file
   const handleFileChange = (event) => {
-    const file = event.target.files[0];
+      const file = event.target.files[0];
 
-    if (!file) return;
+      if (!file) return;
 
-    setAudio(file);
-    setAudioUrl(URL.createObjectURL(file));
-    setResult(null);
-    setError("");
-  };
+      resetRecording();
+
+      setAudio(file);
+      setAudioUrl(URL.createObjectURL(file));
+      setResult(null);
+      setError("");
+    };
 
   return (
     <div className="app">
@@ -232,19 +267,31 @@ function App() {
 
           {!isRecording ? (
             <button
-              className="record-button"
-              onClick={startRecording}
-            >
-              🎙️ Start Recording
-            </button>
-          ) : (
+                className="record-button"
+                onClick={startRecording}
+              >
+                🎙️ Start Recording
+              </button>
+        ) : (
+          <div className="recording-active">
+            <div className="recording-status">
+              <span className="recording-dot"></span>
+              <span>Recording...</span>
+            </div>
+
+            <div className="recording-timer">
+              {String(Math.floor(recordingTime / 60)).padStart(2, "0")}:
+              {String(recordingTime % 60).padStart(2, "0")}
+            </div>
+
             <button
               className="stop-button"
               onClick={stopRecording}
             >
               ⏹ Stop Recording
             </button>
-          )}
+          </div>
+        )}
         </div>
 
         <div className="divider">
@@ -297,6 +344,7 @@ function App() {
       <button
         className="try-again"
         onClick={() => {
+          resetRecording();
           setResult(null);
           setAudio(null);
           setAudioUrl("");
