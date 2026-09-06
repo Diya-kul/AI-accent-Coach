@@ -160,3 +160,53 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 }
+
+.record-section {
+  margin-top: 25px;
+}
+
+.record-button,
+.stop-button {
+  margin-top: 0;
+}
+
+.record-button {
+  background: #8b4dff;
+}
+
+.stop-button {
+  background: #d64545;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 25px 0;
+  color: #777;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: #30333d;
+}
+
+.audio-preview {
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 10px;
+  background: #101218;
+}
+
+.audio-preview p {
+  margin-top: 0;
+  color: #aaa;
+  font-size: 14px;
+}
+
+.audio-preview audio {
+  width: 100%;
+}
